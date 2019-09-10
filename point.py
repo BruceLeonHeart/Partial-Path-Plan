@@ -1,3 +1,4 @@
+#定义点
 class Point():
     def __init__(self,x,y):
         self.x = x

@@ -6,21 +6,31 @@ from math import factorial
 import matplotlib.pyplot as plt
 import numpy as np
 #数学工具
+def point2point(A,B):
+    a = B.y - A.y
+    b = A.x - B.x
+    c = B.x * A.y - A.x * B.y
+    return [a,b,c]
 
-##点P到线段AB距离以及焦点坐标
+
+
+
+##点P到线段AB距离以及交点坐标以及点P与交点直线方程
 def pointToLine(A,B,P):
     ap_ab = (B.x - A.x)*(P.x - A.x)+(B.y - A.y)*(P.y - A.y)
     crossPoint = Point(0,0)
     if(ap_ab <= 0):
         distance =  sqrt( (P.x-A.x)*(P.x-A.x) + (P.y-A.y)*(P.y-A.y) )
         crossPoint = A
-        return distance,crossPoint
+        z = point2point(P,crossPoint)
+        return distance,crossPoint,z
  
     d2 = ( B.x - A.x ) * ( B.x - A.x ) + ( B.y-A.y ) * ( B.y-A.y ) 
     if (ap_ab >= d2):  
         distance = sqrt( (P.x - B.x )*( P.x - B.x ) + ( P.y - B.y )*( P.y - B.y ) ) 
         crossPoint = B
-        return distance,crossPoint
+        z = point2point(P,crossPoint)
+        return distance,crossPoint,z
     
     r = ap_ab / d2
     px = A.x + ( B.x - A.x ) *r
@@ -28,7 +38,8 @@ def pointToLine(A,B,P):
     crossPoint.x = px
     crossPoint.y = py
     distance = sqrt( (P.x - px)*(P.x - px) + (P.y - py)*(P.y - py) )
-    return distance,crossPoint
+    z = point2point(P,crossPoint)
+    return distance,crossPoint,z
     
     
 ##过关键点的贝赛尔曲线

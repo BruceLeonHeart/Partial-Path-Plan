@@ -39,6 +39,7 @@ class Obstacle():
         rect = plt.Rectangle((self.obstacle_x,self.obstacle_y),self.obstacle_width,self.obstacle_height,color='red')
         self.rect = rect
         
+        #self.canBeChosed = True
         
     #使用定值来修改生成的障碍物属性
     def createObs(self,x,y,w,h):
