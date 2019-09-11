@@ -16,8 +16,8 @@ map = Section()
 plt.figure()
 axes = plt.gca()
 #起点与终点
-origin = Point(0,0)
-remote = Point(0,50)
+origin = Point(0.0,0.0)
+remote = Point(0.0,50.0)
 result = [origin,remote]
 
 #路沿
@@ -44,6 +44,12 @@ print('随机障碍物的个数: ',num)
 for i in range(0,num):
     tmpObs = Obstacle()    
     obstacles.append(tmpObs)
+    
+    
+#给定障碍物
+#obs1 = Obstacle()
+#obs1.createObs(-6,10,2,4)
+#obstacles.append(obs1)
 #显示障碍物
 for obs in obstacles:
     axes.add_patch(obs.rect)
@@ -55,18 +61,20 @@ for obs in obstacles:
     1.当储备列表的数目为4时退出
     2.当所求点为上一个输入点时
 '''
-next = Point(-1,-1)
 while True:
-    current = result[-2]
+    res_copy = result.copy()
+    current = res_copy[-2]
+    print('current Now is: ',current,'\t\n')
     #初始化可行域
     subjectList = []
     able_area = Obstacle()
-    able_area.createObs(-20,0,40,50)
+    able_area.createObs(-20.0,0.0,40.0,50.0)
     for medge in able_area.edges:
         medge.getPointEdge(current)
         tmp = Subject(medge.constant)
         tmp.setFlag(current)
-        subjectList.append(tmp)  
+        subjectList.append(tmp)
+          
     #遍历障碍物
     #对于每个障碍物来说，四个边与current都有交点，需要
     #1.检验交点是否处于可行域
@@ -89,7 +97,7 @@ while True:
     
     #对所有障碍物进行排序
     able_obstacle = sorted(able_obstacle,key = lambda edge:(float (edge.distance)),reverse = False)
-    
+
     #从所有障碍物边列表中获取，直到所有障碍物的标志都不可选
     while True:
         choose = []
@@ -108,62 +116,63 @@ while True:
         else:         
             plt.plot([current.x,choose[0].crossPoint.x],[current.y,choose[0].crossPoint.y],'m--')
             #垂直线的直线表达式
-            cons = mathTools.verticalEqua(current,choose[0].cons)
+            cons = mathTools.verticalEqua(choose[0].crossPoint,choose[0].cons)
             #新增约束
             tmpSubject = Subject(cons)
             tmpSubject.setFlag(current)
             subjectList.append(tmpSubject)
-            
+    
+    
+    for a in subjectList:
+        print(a)       
     #从约束条件中求取距离remote最近的点
     p = matrix([[2.0,0.0],[0.0,2.0]])
-    q = matrix([-2*remote.x,-2*remote.y])
-    G = np.array([[]])
-    H = np.array([[]])
-    for subject in subjectList:
-        cons_g = [subject.a,subject.b]
-        cons_h = [subject.c]
+    q = matrix([[-2*remote.x,-2*remote.y]])
+    G = np.array([[0.0,0.0]])
+    H = np.array([[0.0]])
+    
+    
+    for i in range(1,len(subjectList)):
+        cons_g = np.array([subjectList[i].a,subjectList[i].b])
+        cons_h = np.array([subjectList[i].c])
         
         if (subject.flag == -1):#标准型，直接添加 
-            #print(cons_g)
-            #print(cons_h)
-            #print(G)
-            #print(H)
-            #np.append(G,values=cons_g,axis=0)          
-            #np.append(H,values=-cons_h,axis=0)
-            G = np.append(G,values = cons_g)          
-            H = np.append(H,values = -1*cons_h)
+            G = np.row_stack((G,cons_g))
+            H = np.row_stack((H,-1*cons_h))        
+            #H = np.append(H,values = -1*cons_h,axis=0)
 
         elif (subject.flag == 1):#取反
-            #print(cons_g)
-            #print(cons_h)
-            #print(G)
-            #print(H)
-            G = np.append(G,values = -1*cons_g)          
-            H = np.append(H,values = cons_h)
-            #np.append(G,values=-cons_g,axis=0)          
-            #np.append(H,values=cons_h,axis=0)
+            G = np.row_stack((G,-1*cons_g))
+            H = np.row_stack((H,cons_h))
 
         else:
             continue
-    g = matrix(G,(2,len(G)/2))
-    h = matrix(H) 
-    print('g',g)
-    print('\n')
-    print('h',h)
-      
-    res = solvers.qp(p,q,g,h)
-    next.x = res[0]
-    next.y = res[1]
-    if(next==result[-2]):
+    g = matrix(G)
+    g = g[1:,:]
+    h = matrix(H)
+    h = h[1:,:]      
+    sol = solvers.qp(p,q,g,h)
+    res = sol['x']
+    print(res)
+    next = Point(res[0],res[1]) 
+    
+    print(next,'\t',current)  
+    if((abs(next.x-current.x) < 1e-2) and (abs(next.y-current.y) < 1e-2)):
+        print('NOW EQUAL')
+        break
+    elif((abs(next.x-remote.x) < 1e-2) and (abs(next.y-remote.y) < 1e-2)):
+        print('TOUCH END')
         break
     elif(len(result)==4):
+        print('ENOUGH POINT')
         break
     else:
-        result.insert(-2,next)
+        result.insert(-1,next)
+        for m in result:
+            print('after added ',m)
 #对数据集里面的点做贝赛尔曲线
-for p in result:
-    print(p)
-    
+xset,yset = mathTools.bezier(result)
+axes.plot(xset,yset)   
     
 
 
